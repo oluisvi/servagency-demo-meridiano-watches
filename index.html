@@ -24,7 +24,18 @@
     @media(max-width:850px){.hero{grid-template-columns:1fr}.hero-copy{padding:5rem 1.5rem 2rem}.stage{min-height:520px}.watch-wrap{width:min(58%,330px)}.intro,.story{grid-template-columns:1fr}.custom-grid{grid-template-columns:1fr}.option-panel{padding-right:0}.navlinks a:not(.outline){display:none}.custom-head{display:block}}
     @media(max-width:550px){.nav{height:68px}.brand{font-size:1.25rem}.navlinks .outline{font-size:.6rem}.hero-copy h1{font-size:clamp(3.9rem,17vw,6rem)}.stage{min-height:440px}.watch-wrap{width:64%}.ticker{flex-wrap:wrap;justify-content:start}.detail-card{min-height:300px}.custom,.story,.intro{padding-block:4.5rem}.preview{min-height:400px}.mini-case{width:200px!important;height:200px!important}.specs{grid-template-columns:1fr 1fr}.story-visual{min-height:240px}}
     @media(prefers-reduced-motion:reduce){:root{scroll-behavior:auto}*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
-  /* ServAgency motion refinement */.motion-ready [data-scroll-reveal]{opacity:0;transform:translate3d(0,28px,0);transition:opacity .7s cubic-bezier(.22,.61,.36,1),transform .7s cubic-bezier(.22,.61,.36,1);transition-delay:calc(var(--reveal-index,0)*70ms)}.motion-ready [data-scroll-reveal][data-scroll-visible="true"]{opacity:1;transform:translate3d(0,0,0)}.motion-ready [data-scroll-reveal]:focus-within{opacity:1;transform:none}@media(prefers-reduced-motion:reduce){.motion-ready [data-scroll-reveal]{opacity:1;transform:none;transition:none}}</style>
+  /* ServAgency motion refinement */.motion-ready [data-scroll-reveal]{opacity:0;transform:translate3d(0,28px,0);transition:opacity .7s cubic-bezier(.22,.61,.36,1),transform .7s cubic-bezier(.22,.61,.36,1);transition-delay:calc(var(--reveal-index,0)*70ms)}.motion-ready [data-scroll-reveal][data-scroll-visible="true"]{opacity:1;transform:translate3d(0,0,0)}.motion-ready [data-scroll-reveal]:focus-within{opacity:1;transform:none}@media(prefers-reduced-motion:reduce){.motion-ready [data-scroll-reveal]{opacity:1;transform:none;transition:none}}
+/* A peça acompanha a leitura do hero e reage à escolha de acabamento. */
+.watch-wrap{transform:rotate(var(--watch-scroll-angle,0deg))}
+.watch-wrap:hover{transform:rotate(calc(var(--watch-scroll-angle,0deg) - 7deg)) scale(1.035)}
+.preview .mini-case{background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--dial),white 33%),var(--dial) 48%,color-mix(in srgb,var(--dial),black 38%));transition:border-color .4s ease,filter .4s ease}
+.watch-wrap.is-changing,.preview .mini-case.is-changing{animation:watch-settle .58s cubic-bezier(.2,.75,.2,1)}
+@keyframes watch-settle{0%{filter:brightness(1.45)}55%{filter:brightness(1.12)}100%{filter:brightness(1)}}
+@media(max-height:760px) and (min-width:851px){.hero-copy{padding-block:3rem}.hero-copy h1{font-size:clamp(4rem,7.5vw,7rem)}}
+@media(max-width:550px){.brand{font-size:1.06rem;letter-spacing:.13em}.navlinks .outline{white-space:nowrap}.preview{padding:1.5rem}}
+@media(prefers-reduced-motion:reduce){.watch-wrap{transform:none!important}.watch-wrap.is-changing,.preview .mini-case.is-changing{animation:none!important}}
+
+</style>
 </head>
 <body>
   <a class="skip" href="#principal">Pular para o conteúdo</a>
@@ -44,7 +55,12 @@
     document.querySelectorAll('[data-dial]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-dial]').forEach(b=>b.setAttribute('aria-pressed','false'));button.setAttribute('aria-pressed','true');const choice=dials[button.dataset.dial];selectedDial=choice.name;root.style.setProperty('--dial',choice.color);root.style.setProperty('--metal',choice.metal);update()}));
     document.querySelectorAll('[data-strap]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-strap]').forEach(b=>b.setAttribute('aria-pressed','false'));button.setAttribute('aria-pressed','true');const choice=straps[button.dataset.strap];selectedStrap=choice.name;root.style.setProperty('--strap',choice.color);update()}));
     document.getElementById('copy-choice').addEventListener('click',async()=>{const status=document.getElementById('copy-status'),value='Meridiano Horizonte 001 — '+selectedDial+' / '+selectedStrap;try{await navigator.clipboard.writeText(value);status.textContent='Combinação copiada: '+value}catch{status.textContent='Sua escolha: '+value}});
-  </script>
+  
+const watchHero=document.querySelector('.hero'),watchObject=document.querySelector('.watch-wrap');
+if(!matchMedia('(prefers-reduced-motion: reduce)').matches){let queued=false;const setScrollAngle=()=>{const box=watchHero.getBoundingClientRect(),progress=Math.max(0,Math.min(1,-box.top/Math.max(box.height,1)));document.documentElement.style.setProperty('--watch-scroll-angle',(progress*24).toFixed(1)+'deg');queued=false};window.addEventListener('scroll',()=>{if(!queued){queued=true;requestAnimationFrame(setScrollAngle)}},{passive:true});setScrollAngle()}
+document.querySelectorAll('[data-dial],[data-strap]').forEach(button=>button.addEventListener('click',()=>{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;for(const part of [watchObject,document.querySelector('.preview .mini-case')]){part.classList.remove('is-changing');void part.offsetWidth;part.classList.add('is-changing')}}));
+
+</script>
 <script>/* ServAgency motion refinement */(()=>{const reduce=matchMedia("(prefers-reduced-motion: reduce)");const items=[...document.querySelectorAll("main > section,main > article,section article")];if(!items.length||reduce.matches)return;document.documentElement.classList.add("motion-ready");const show=el=>el.setAttribute("data-scroll-visible","true");const groups=new Map();for(const el of items){el.setAttribute("data-scroll-reveal","");const parent=el.parentElement;const n=groups.get(parent)||0;el.style.setProperty("--reveal-index",String(Math.min(n,5)));groups.set(parent,n+1)}if(!("IntersectionObserver" in window)){items.forEach(show);return}const observer=new IntersectionObserver(entries=>{for(const entry of entries)if(entry.isIntersecting){show(entry.target);observer.unobserve(entry.target)}},{threshold:.08,rootMargin:"0px 0px -6% 0px"});for(const el of items)observer.observe(el);document.addEventListener("focusin",event=>{const target=event.target.closest("[data-scroll-reveal]");if(target)show(target)});reduce.addEventListener("change",()=>{if(reduce.matches){items.forEach(show);document.documentElement.classList.remove("motion-ready");observer.disconnect()}})})();</script></body>
 </html>
 
